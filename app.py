@@ -128,10 +128,10 @@ def register_user():
 		lname=request.form.get('lname')
 		hometown=request.form.get('hometown')
 		gender=request.form.get('gender')
-
 	except:
 		print("couldn't find all tokens") #this prints to shell, end users will not see this (all print statements go to shell)
 		return flask.redirect(flask.url_for('register'))
+	
 	cursor = conn.cursor()
 	test =  isEmailUnique(email)
 	if test:
@@ -145,6 +145,19 @@ def register_user():
 	else:
 		print("couldn't find all tokens")
 		return flask.redirect(flask.url_for('register'))
+
+@app.route('/friends', methods=['GET', 'POST'])
+def friends():
+	try:
+		friendmail=request.form.get('friendmail')
+	except:
+		print("couldn't find all tokens")
+		return flask.redirect(flask.url_for('friends'))
+
+	cursor = conn.cursor()
+	cursor.execute("INSERT INTO Friends (user_id, friend_id) VALUES ('{0}', '{1}')".format(getUserIdFromEmail(flask_login.current_user.id), getUserIdFromEmail(friendmail)))
+
+	return render_template('friends.html')
 
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
@@ -198,7 +211,7 @@ def upload_file():
 #default page
 @app.route("/", methods=['GET'])
 def hello():
-	return render_template('hello.html', message='Welecome to Photoshare')
+	return render_template('hello.html', message='Welcome to Photoshare')
 
 
 if __name__ == "__main__":
