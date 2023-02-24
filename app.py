@@ -35,7 +35,7 @@ login_manager.init_app(app)
 conn = mysql.connect()
 cursor = conn.cursor()
 cursor.execute("SELECT email from Users")
-users = cursor.fetchall()
+users = cursor.fetchall() # Email of Users
 
 def getUserList():
 	cursor = conn.cursor()
@@ -146,17 +146,19 @@ def register_user():
 		print("couldn't find all tokens")
 		return flask.redirect(flask.url_for('register'))
 
-# @app.route('/friends', methods=['GET', 'POST'])
-# def friends():
-# 	try:
-# 		friendmail=request.form.get('friendmail')
-# 	except:
-# 		print("couldn't find all tokens")
-# 		return flask.redirect(flask.url_for('friends'))
+@app.route('/friends', methods=['GET', 'POST'])
+def friends():
+	cursor = conn.cursor()
+	cursor.execute("SELECT email, user_id FROM Users")
+	userList = cursor.fetchall()
+	uid1 = getUserIdFromEmail(flask_login.current_user.id)
+	friend = request.form.get('friendEmail')
+	if request.method == 'POST':
+		
+		return render_template('friends.html', message = "Friends Added")
+	else:
+		return render_template('friends.html', userList = userList)
 
-# 	cursor = conn.cursor()
-# 	cursor.execute("INSERT INTO Friends (user_id, friend_id) VALUES ('{0}', '{1}')".format(getUserIdFromEmail(flask_login.current_user.id), getUserIdFromEmail(friendmail)))
-# 	return render_template('hello.html', name=flask_login.current_user.id, message='Friend Added!')
 
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
