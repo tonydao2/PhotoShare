@@ -146,18 +146,17 @@ def register_user():
 		print("couldn't find all tokens")
 		return flask.redirect(flask.url_for('register'))
 
-@app.route('/friends', methods=['GET', 'POST'])
-def friends():
-	try:
-		friendmail=request.form.get('friendmail')
-	except:
-		print("couldn't find all tokens")
-		return flask.redirect(flask.url_for('friends'))
+# @app.route('/friends', methods=['GET', 'POST'])
+# def friends():
+# 	try:
+# 		friendmail=request.form.get('friendmail')
+# 	except:
+# 		print("couldn't find all tokens")
+# 		return flask.redirect(flask.url_for('friends'))
 
-	cursor = conn.cursor()
-	cursor.execute("INSERT INTO Friends (user_id, friend_id) VALUES ('{0}', '{1}')".format(getUserIdFromEmail(flask_login.current_user.id), getUserIdFromEmail(friendmail)))
-
-	return render_template('friends.html')
+# 	cursor = conn.cursor()
+# 	cursor.execute("INSERT INTO Friends (user_id, friend_id) VALUES ('{0}', '{1}')".format(getUserIdFromEmail(flask_login.current_user.id), getUserIdFromEmail(friendmail)))
+# 	return render_template('hello.html', name=flask_login.current_user.id, message='Friend Added!')
 
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
