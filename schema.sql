@@ -1,89 +1,91 @@
 CREATE DATABASE IF NOT EXISTS photoshare;
+
 USE photoshare;
+
 DROP TABLE IF EXISTS Pictures CASCADE;
+
 DROP TABLE IF EXISTS Users CASCADE;
 
 CREATE TABLE Users (
-    user_id INT NOT NULL  AUTO_INCREMENT,
-    gender VARCHAR(255),
-    email VARCHAR(255) UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
-    birthday DATE NOT NULL,
-    hometown VARCHAR(255),
-    CONSTRAINT users_pk PRIMARY KEY (user_id)
+  user_id int AUTO_INCREMENT,
+  email varchar(255) UNIQUE,
+  password varchar(255),
+  dob DATE NOT NULL,
+  hometown VARCHAR(40),
+  fname VARCHAR(40) NOT NULL,
+  lname VARCHAR(40) NOT NULL,
+  gender VARCHAR(6),
+  CONSTRAINT users_pk PRIMARY KEY (user_id)
 );
 
-CREATE TABLE Photos
-(
+CREATE TABLE Albums (
+  album_id INT AUTO_INCREMENT,
+  Name VARCHAR(40) NOT NULL,
+  date_of_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+  user_id INT NOT NULL,
+  PRIMARY KEY (album_id),
+  FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE Photos (
   photo_id INT AUTO_INCREMENT,
   user_id INT,
-  imgdata longblob,
-  caption VARCHAR(255),
+  caption VARCHAR(200),
+  imgdata LONGBLOB,
   album_id INT NOT NULL,
-  CONSTRAINT photos_pk PRIMARY KEY (photo_id),
+  PRIMARY KEY (photo_id),
   FOREIGN KEY (user_id) REFERENCES Users(user_id),
   FOREIGN KEY (album_id) REFERENCES Albums(album_id) ON DELETE CASCADE
 );
 
-CREATE TABLE Albums
-(
-  album_id INT AUTO_INCREMENT,
-  user_id int4 NOT NULL,
-  album_name VARCHAR(255) NOT NULL,
-  date_of_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
-  INDEX upid_idx (user_id),
-  CONSTRAINT albums_pk PRIMARY KEY (album_id),
-  FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
-);
-
-CREATE TABLE Comments
-(
+CREATE TABLE Comments (
   comment_id INT NOT NULL AUTO_INCREMENT,
   text TEXT NOT NULL,
+  date DATETIME DEFAULT CURRENT_TIMESTAMP,
   user_id INT NOT NULL,
-  picture_id INT NOT NULL,
-  date_of_comment DATETIME DEFAULT CURRENT_TIMESTAMP,
+  photo_id INT NOT NULL,
   PRIMARY KEY (comment_id),
-  FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-  FOREIGN KEY (photo_id) REFERENCES Photos(photo_id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES Users (user_id) ON DELETE CASCADE,
+  FOREIGN KEY (photo_id) REFERENCES Photos (photo_id) ON DELETE CASCADE
 );
 
-CREATE TABLE Likes
-(
+CREATE TABLE Likes ( 
   user_id INT NOT NULL,
-  picture_id INT NOT NULL,
+  photo_id INT NOT NULL,
   PRIMARY KEY (photo_id, user_id),
-  FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-  FOREIGN KEY (photo_id) REFERENCES Photos(photo_id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES Users (user_id) ON DELETE CASCADE,
+  FOREIGN KEY (photo_id) REFERENCES Photos (photo_id) ON DELETE CASCADE
 );
 
-CREATE TABLE Tags
-(
-  tag_id INT,
+CREATE TABLE Tags (
+  tag_id INTEGER,
   name VARCHAR(100),
-  PRIMARY KEY(tag_id)
+  PRIMARY KEY (tag_id)
 );
 
-CREATE TABLE Tagged
-(
-  photo_id INT,
-  tag_id INT,
-  PRIMARY KEY(photo_id, tag_id),
-  FOREIGN KEY (photo_id) REFERENCES Photos(photo_id),
-  FOREIGN KEY (tag_id) REFERENCES Tags(tag_id)
+CREATE TABLE Tagged (
+  photo_id INTEGER,
+  tag_id INTEGER,
+  PRIMARY KEY (photo_id, tag_id),
+  FOREIGN KEY(photo_id) REFERENCES Photos(photo_id),
+  FOREIGN KEY(tag_id) REFERENCES Tags (tag_id)
 );
 
-CREATE TABLE Friends
-(
+CREATE TABLE Friendship (
   UID1 INT NOT NULL,
   UID2 INT NOT NULL,
-  CHECK (UID1 != UID2),
-  PRIMARY KEY (UID1, UID2),
-  FOREIGN KEY (UID1) REFERENCES Users(user_id) ON DELETE CASCADE,
-  FOREIGN KEY (UID2) REFERENCES Users(user_id) ON DELETE CASCADE
+  CHECK (UID1 <> UID2),
+  PRIMARY KEY(UID1, UID2),
+  FOREIGN KEY (UID1) REFERENCES Users (user_id) ON DELETE CASCADE,
+  FOREIGN KEY (UID2) REFERENCES Users (user_id) ON DELETE CASCADE
 );
 
-INSERT INTO Users (email, password) VALUES ('test@bu.edu', 'test');
-INSERT INTO Users (email, password) VALUES ('test1@bu.edu', 'test');
+-- CREATE ASSERTION Comment-Constraint CHECK 
+--   (NOT EXISTS (SELECT * FROM Comments C, Photos P
+--     WHERE C.photo_id = P.photo_id AND P.user_id = C.user_id));
+    
+    
+INSERT INTO Users (email, password, fname, lname, dob, hometown, gender) VALUES ('test@bu.edu', 'test');
+
+INSERT INTO Users (email, password, fname, lname, dob, hometown, gender) VALUES ('test1@bu.edu', 'test');
+
