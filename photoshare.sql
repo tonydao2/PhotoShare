@@ -1,10 +1,11 @@
+-- SQLite
 -- CREATE DATABASE IF NOT EXISTS photoshare;
 -- USE photoshare;
 -- DROP TABLE IF EXISTS Pictures CASCADE;
 -- DROP TABLE IF EXISTS Users CASCADE;
 
 CREATE TABLE Users (
-    user_id INT NOT NULL  AUTO_INCREMENT,
+    user_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     gender VARCHAR(255),
     email VARCHAR(255) UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -12,7 +13,7 @@ CREATE TABLE Users (
     last_name VARCHAR(255),
     birthday DATE NOT NULL,
     hometown VARCHAR(255),
-    CONSTRAINT users_pk PRIMARY KEY (user_id)
+    PRIMARY KEY (user_id)
 );
 
 CREATE TABLE Photos
