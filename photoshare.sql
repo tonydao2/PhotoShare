@@ -1,11 +1,10 @@
--- SQLite
 -- CREATE DATABASE IF NOT EXISTS photoshare;
 -- USE photoshare;
 -- DROP TABLE IF EXISTS Pictures CASCADE;
 -- DROP TABLE IF EXISTS Users CASCADE;
 
 CREATE TABLE Users (
-    user_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL  AUTO_INCREMENT,
     gender VARCHAR(255),
     email VARCHAR(255) UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -13,17 +12,16 @@ CREATE TABLE Users (
     last_name VARCHAR(255),
     birthday DATE NOT NULL,
     hometown VARCHAR(255),
-    PRIMARY KEY (user_id)
+    CONSTRAINT users_pk PRIMARY KEY (user_id)
 );
 
 CREATE TABLE Photos
 (
-  photo_id INT  AUTO_INCREMENT,
+  photo_id INT AUTO_INCREMENT,
   user_id INT,
   imgdata longblob,
   caption VARCHAR(255),
-  album_id INT NOT NULL
-  INDEX upid_idx (user_id),
+  album_id INT NOT NULL,
   CONSTRAINT photos_pk PRIMARY KEY (photo_id),
   FOREIGN KEY (user_id) REFERENCES Users(user_id),
   FOREIGN KEY (album_id) REFERENCES Albums(album_id) ON DELETE CASCADE
@@ -43,7 +41,7 @@ CREATE TABLE Albums
 CREATE TABLE Comments
 (
   comment_id INT NOT NULL AUTO_INCREMENT,
-  text TEXT NOT NULL
+  text TEXT NOT NULL,
   user_id INT NOT NULL,
   picture_id INT NOT NULL,
   date_of_comment DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -56,7 +54,7 @@ CREATE TABLE Likes
 (
   user_id INT NOT NULL,
   picture_id INT NOT NULL,
-  PRIMARY KEY (like_id),
+  PRIMARY KEY (photo_id, user_id),
   FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
   FOREIGN KEY (photo_id) REFERENCES Photos(photo_id) ON DELETE CASCADE
 );
@@ -75,7 +73,7 @@ CREATE TABLE Tagged
   PRIMARY KEY(photo_id, tag_id),
   FOREIGN KEY (photo_id) REFERENCES Photos(photo_id),
   FOREIGN KEY (tag_id) REFERENCES Tags(tag_id)
-)
+);
 
 CREATE TABLE Friends
 (
@@ -85,7 +83,7 @@ CREATE TABLE Friends
   PRIMARY KEY (UID1, UID2),
   FOREIGN KEY (UID1) REFERENCES Users(user_id) ON DELETE CASCADE,
   FOREIGN KEY (UID2) REFERENCES Users(user_id) ON DELETE CASCADE
-)
+);
 
 INSERT INTO Users (email, password) VALUES ('test@bu.edu', 'test');
 INSERT INTO Users (email, password) VALUES ('test1@bu.edu', 'test');
