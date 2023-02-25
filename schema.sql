@@ -58,7 +58,7 @@ CREATE TABLE Likes (
 );
 
 CREATE TABLE Tags (
-  tag_id INTEGER AUTOINCREMENT,
+  tag_id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(100),
   PRIMARY KEY (tag_id)
 );
@@ -71,7 +71,7 @@ CREATE TABLE Tagged (
   FOREIGN KEY(tag_id) REFERENCES Tags (tag_id)
 );
 
-CREATE TABLE Friendship (
+CREATE TABLE Friends (
   UID1 INT NOT NULL,
   UID2 INT NOT NULL,
   CHECK (UID1 <> UID2),
@@ -79,13 +79,3 @@ CREATE TABLE Friendship (
   FOREIGN KEY (UID1) REFERENCES Users (user_id) ON DELETE CASCADE,
   FOREIGN KEY (UID2) REFERENCES Users (user_id) ON DELETE CASCADE
 );
-
--- CREATE ASSERTION Comment-Constraint CHECK 
---   (NOT EXISTS (SELECT * FROM Comments C, Photos P
---     WHERE C.photo_id = P.photo_id AND P.user_id = C.user_id));
-    
-    
-INSERT INTO Users (email, password, fname, lname, dob, hometown, gender) VALUES ('test@bu.edu', 'test');
-
-INSERT INTO Users (email, password, fname, lname, dob, hometown, gender) VALUES ('test1@bu.edu', 'test');
-

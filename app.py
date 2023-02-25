@@ -167,9 +167,9 @@ def isEmailUnique(email):
 	else:
 		return True
 
-def getPhotoId(photo_data):
+def getPhotoId(imgdata):
 	cursor = conn.cursor()
-	cursor.execute("SELECT photo_id FROM Photos WHERE photo_data = '{0}'".format(photo_data))
+	cursor.execute("SELECT photo_id FROM Photos WHERE imgdata = %s", (imgdata))
 	return cursor.fetchone()[0]
 
 def getAlbumId(album_name):
@@ -183,6 +183,11 @@ def getPhotosFromAlbum(album_id):
 	cursor.execute("SELECT imgdata, photo_id, caption FROM Photos WHERE album_id = '{0}'".format(album_id))
 
 	return cursor.fetchall()
+
+def getTagId(tag):
+	cursor = conn.cursor()
+	cursor.execute("SELECT tag_id FROM Tags WHERE name = '{0}'".format(tag))
+	return cursor.fetchone()[0]
 
 #end login code
 
@@ -204,23 +209,27 @@ def upload_file():
 		uid = getUserIdFromEmail(flask_login.current_user.id)
 		imgfile = request.files['photo']
 		caption = request.form.get('caption')
-		tag = request.form.get('tag')
+		tag = request.form.get('tags')
 		album_name = request.form.get('album_name')
-		photo_data =imgfile.read()
+		photo_data = imgfile.read()
 		cursor = conn.cursor()
 
 		album_id = getAlbumId(album_name)
-
 		#insert photo into database
 		cursor.execute("INSERT INTO Photos(imgdata, user_id, caption, album_id) VALUES (%s, %s, %s, %s)", (photo_data, uid, caption, album_id))
 		conn.commit()
 
-		# cursor.execute("INSERT INTO Tags (name) VALUES ('{0}')".format(tag))
-		# conn.commit()
-		# #Link tag with photo
+		cursor.execute("SELECT photo_id FROM Photos WHERE imgdata = %s", (photo_data))
+		photoid = cursor.fetchone()[0]
 
-		# photoid = getPhotoId(photo_data)
-		# cursor.execute("INSERT INTO Tagged (tag, photo_id) VALUES ('{0}', '{1}')", (tag, photoid))
+	   
+		#insert tags into database
+		cursor.execute("INSERT INTO Tags(name) VALUES (%s)", (tag))
+
+		tag_id = getTagId(tag)
+		#Link tag and photo
+		cursor.execute("INSERT INTO Tagged(photo_id, tag_id) VALUES (%s, %s)", (photoid, tag_id))
+		conn.commit()
 
 		return render_template('upload.html', message='Photo uploaded!')
 	
