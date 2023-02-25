@@ -13,6 +13,7 @@ import flask
 from flask import Flask, Response, request, render_template, redirect, url_for
 from flaskext.mysql import MySQL
 import flask_login
+import sys
 
 #for image uploading
 import os, base64
@@ -133,8 +134,8 @@ def register_user():
 		return flask.redirect(flask.url_for('register'))
 	
 	cursor = conn.cursor()
-	test =  isEmailUnique(email)
-	if test:
+	test = isEmailUnique(email) # Account is unique
+	if test: 
 		print(cursor.execute("INSERT INTO Users (email, password, dob, fname, lname, hometown, gender) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}')".format(email, password, dob, fname, lname, hometown, gender)))
 		conn.commit()
 		#log user in
@@ -142,22 +143,9 @@ def register_user():
 		user.id = email
 		flask_login.login_user(user)
 		return render_template('hello.html', name=email, message='Account Created!')
-	else:
+	else: # Already created account
 		print("couldn't find all tokens")
 		return flask.redirect(flask.url_for('register'))
-
-@app.route('/friends', methods=['GET', 'POST'])
-def friends():
-	cursor = conn.cursor()
-	cursor.execute("SELECT email, user_id FROM Users")
-	userList = cursor.fetchall()
-	uid1 = getUserIdFromEmail(flask_login.current_user.id)
-	friend = request.form.get('friendEmail')
-	if request.method == 'POST':
-		
-		return render_template('friends.html', message = "Friends Added")
-	else:
-		return render_template('friends.html', userList = userList)
 
 
 def getUsersPhotos(uid):
@@ -207,6 +195,34 @@ def upload_file():
 	else:
 		return render_template('upload.html')
 #end photo uploading code
+
+# MY METHODS
+
+#Search a friend
+@app.route('/add_friends', methods=['GET', 'POST'])
+@flask_login.login_required
+def AddFriends():
+	if request.method == 'POST':
+		uid = getUserIdFromEmail(flask_login.current_user.id)
+		friend_email = request.form.get('friend_email')
+		cursor = conn.cursor()
+		friend_id = getUserIdFromEmail(friend_email)
+
+		cursor.execute("SELECT UID2 FROM Friends WHERE UID1 = '{0}'".format(uid))
+		data = cursor.fetchall()
+
+		for i in data:
+			if i[0] == friend_id:
+				return render_template('add_friends.html', message = "Already friends!")
+
+		cursor.execute("INSERT INTO Friends (UID1, UID2) VALUES ('{0}', '{1}')".format(uid, friend_id))
+		conn.commit()
+		
+		return render_template('add_friends.html', message = "Added as friends!")
+	
+	return render_template('add_friends.html')
+
+
 
 
 #default page
