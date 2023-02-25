@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+
+<head>
+    <title> List of friends </title>
+</head>
+
+<body>
+    
+{%if message%}
+    <h4>{{message}}</h4>
+{%endif%}
+
+{%if friends%}
+    <ul>
+    {%for friend in friends%}
+        <li>{{friend[0] + ": " + friend[1] + " " + friend[2]}}</li>
+    {%endfor%}
+    </ul>
+{%endif%}
+
+</body>
+
+
+<ul>
+    <li><a href='/upload'>Upload a photo</a> </li>
+    <li><a href='/logout'>Logout</a></li>
+    <li><a href='/'>Home</a></li>
+    <li><a href='/add_friends'>Add a friend</a></li>
+    
+</ul>
