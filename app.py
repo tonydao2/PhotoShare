@@ -24,7 +24,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'Manhnee1711~'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'tony2000'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -178,6 +178,12 @@ def getAlbumId(album_name):
 	cursor.execute("SELECT album_id FROM Albums WHERE Name = '{0}' AND user_id = '{1}'".format(album_name, uid))
 	return cursor.fetchone()[0]
 
+def getPhotosFromAlbum(album_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT imgdata, photo_id, caption FROM Photos WHERE album_id = '{0}'".format(album_id))
+
+	return cursor.fetchall()
+
 #end login code
 
 @app.route('/profile')
@@ -273,8 +279,31 @@ def CreateAlbum():
 	else:
 		return render_template('create_album.html')
 	
+@app.route('/browse_album', methods=['GET' , 'POST'])
+def BrowseAlbum():
+	if request.method == 'POST':
+		print("POST")
+		userMail = request.form.get('userMail')
+		uid = getUserIdFromEmail(userMail)
+		cursor = conn.cursor()
+		cursor.execute("SELECT Name, album_id FROM Albums WHERE user_id = '{0}'".format(uid))
+		albums = cursor.fetchall()
 
+		return render_template('choose_album.html', message='Here are your albums', albums = albums, uid = uid)
+	
+	return render_template('browse_album.html')
 
+@app.route('/choose_album', methods=['GET', 'POST'])
+def ShowPhotos():
+	if request.method == 'POST':
+		albumId = request.form.get('albumId')
+		cursor = conn.cursor()
+		photos = getPhotosFromAlbum(albumId)
+
+		return render_template('show_photos.html', message='Here are your photos', photos = photos, base64=base64)
+	
+	return render_template('show_photos.html')
+	
 
 #default page
 @app.route("/", methods=['GET'])

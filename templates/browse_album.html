@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <head>
-    <title>Browse Photo</title>
-  </head>
-  <div class="title">
-    <h1> Select Photo of the User</h1>
-</div>
+    <title>Browse Album</title>
+</head>
+
+<h1> Choose the user who's album you want to view</h1>
+<body>
+
 
 <div id="content">
-    <form method="post" action="{{ url_for('friends') }}">
+    <form method="post" action="{{ url_for('BrowseAlbum') }}">
         <label for="userMail">Enter the user email:</label>
         <input type="userMail" name="userMail" /><br />
-
     </form>
 </div>
+
+
 
   <ul>
     <li><a href='/upload'>Upload a photo</a> </li>
@@ -20,4 +22,5 @@
     <li><a href='/'>Home</a></li>
     <li><a href="/list_friends">See your friends</a></li>
   </ul>
-<a href='/'>Home</a>
+
+</body>

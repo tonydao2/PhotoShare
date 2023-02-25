@@ -1,0 +1,22 @@
+<head>
+    <title> Choose an Album to view </title>
+</head>
+
+<body>
+
+{% if message %}
+    <h4>{{message}}</h4>
+{% endif %}
+
+<h4>Choose an album of the user to browse:</h4>
+    <form method="post" action="{{ url_for('ShowPhotos') }}">
+
+    {%for album in albums%}
+      <input type="radio" name="albumId" value={{album[1]}}>
+      <label for="albumId">{{album[0]}}</label>
+    {%endfor%}
+    <br />
+    <input type="submit" />
+    </form>
+
+</body>
