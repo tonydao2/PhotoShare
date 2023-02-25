@@ -3,6 +3,10 @@
     <title>Upload a photo!</title>
 </head>
     <body>
+        {% if message %}
+            <h4>{{message}}</h4>
+        {% endif %}
+
         <div class="title">
             <h1>Upload a photo to Photoshare</h1>
         </div>
@@ -11,10 +15,10 @@
                 <input type="file" name="photo" required='true' /><br />
                 <label for="caption">Please caption:</label>
                 <input type="text" name="caption" required='true' /><br />
-                <label for="album">Enter an album you want to put the photo into:</label>
-                <input type="text" name="album" required='true' /><br />
+                <label for="album_name">Please select an album:</label>
+                <input type="text" name="album_name" required='true' /><br />
                 <label for="tags">Please tag: </label>
-                <input type="text" name="tags" required='false' /><br />
+                <input type="text" name="tags"/><br />
                 <input type="submit" value="Upload" />
             </form>
     </body>

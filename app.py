@@ -150,7 +150,7 @@ def register_user():
 
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
-	cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures WHERE user_id = '{0}'".format(uid))
+	cursor.execute("SELECT imgdata, photo_id, caption FROM Photos WHERE user_id = '{0}'".format(uid))
 	return cursor.fetchall() #NOTE return a list of tuples, [(imgdata, pid, caption), ...]
 
 def getUserIdFromEmail(email):
@@ -170,6 +170,12 @@ def isEmailUnique(email):
 def getPhotoId(photo_data):
 	cursor = conn.cursor()
 	cursor.execute("SELECT photo_id FROM Photos WHERE photo_data = '{0}'".format(photo_data))
+	return cursor.fetchone()[0]
+
+def getAlbumId(album_name):
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	cursor = conn.cursor()
+	cursor.execute("SELECT album_id FROM Albums WHERE Name = '{0}' AND user_id = '{1}'".format(album_name, uid))
 	return cursor.fetchone()[0]
 
 #end login code
@@ -193,22 +199,24 @@ def upload_file():
 		imgfile = request.files['photo']
 		caption = request.form.get('caption')
 		tag = request.form.get('tag')
-		album = request.form.get('album')
+		album_name = request.form.get('album_name')
 		photo_data =imgfile.read()
 		cursor = conn.cursor()
 
+		album_id = getAlbumId(album_name)
+
 		#insert photo into database
-		cursor.execute("INSERT INTO Photos(imgdata, user_id, caption) VALUES (%s, %s, %s )", (photo_data, uid, caption))
+		cursor.execute("INSERT INTO Photos(imgdata, user_id, caption, album_id) VALUES (%s, %s, %s, %s)", (photo_data, uid, caption, album_id))
 		conn.commit()
 
-		cursor.execute("INSERT INTO Tags (name) VALUES ('{0}')".format(tag))
-		conn.commit()
-		#Link tag with photo
+		# cursor.execute("INSERT INTO Tags (name) VALUES ('{0}')".format(tag))
+		# conn.commit()
+		# #Link tag with photo
 
-		photoid = getPhotoId(photo_data)
-		cursor.execute("INSERT INTO Tagged (tag, photo_id) VALUES ('{0}', '{1}')", (tag, photoid))
+		# photoid = getPhotoId(photo_data)
+		# cursor.execute("INSERT INTO Tagged (tag, photo_id) VALUES ('{0}', '{1}')", (tag, photoid))
 
-		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(uid), base64=base64)
+		return render_template('upload.html', message='Photo uploaded!')
 	
 	
 	#The method is GET so we return a  HTML form to upload the a photo.
