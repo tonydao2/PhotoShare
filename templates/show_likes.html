@@ -1,0 +1,28 @@
+<head>
+    <title>View Likes on Photo</title>
+</head>
+
+<body>
+    {% if message %}
+      <h2>{{message}}</h2>
+    {% endif %}
+
+    {% if likes %}
+        <h4>{{likes[0][0]}}</h4>
+    {% endif %}
+
+    {% if users %}
+        <ul>
+        {% for user in users %}
+            <li>{{user[0] + " " + user[1]}} </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+
+    <ul>
+        <li><a href='/logout'>Logout</a></li>
+        <li><a href='/'>Home</a></li>
+    </ul>
+
+</body>

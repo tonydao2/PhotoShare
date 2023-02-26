@@ -119,6 +119,10 @@ def unauthorized_handler():
 def register():
 	return render_template('register.html', supress='True')
 
+@app.route("/accountExists", methods=['GET'])
+def accountExists():
+	return render_template('accountExist.html')
+
 @app.route("/register", methods=['POST'])
 def register_user():
 	try:
@@ -145,12 +149,12 @@ def register_user():
 		return render_template('hello.html', name=email, message='Account Created!')
 	else: # Already created account
 		print("couldn't find all tokens")
-		return render_template('register.html', supress='False')
+		return flask.redirect(flask.url_for('accountExists'))
 
 
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
-	cursor.execute("SELECT imgdata, photo_id, caption FROM Photos WHERE user_id = '{0}'".format(uid))
+	cursor.execute("SELECT imgdata, photo_id, caption, user_id FROM Photos WHERE user_id = '{0}'".format(uid))
 	return cursor.fetchall() #NOTE return a list of tuples, [(imgdata, pid, caption), ...]
 
 def getUserIdFromEmail(email):
@@ -161,7 +165,7 @@ def getUserIdFromEmail(email):
 def isEmailUnique(email):
 	#use this to check if a email has already been registered
 	cursor = conn.cursor()
-	if cursor.execute("SELECT email  FROM Users WHERE email = '{0}'".format(email)):
+	if cursor.execute("SELECT email FROM Users WHERE email = '{0}'".format(email)):
 		#this means there are greater than zero entries with that email
 		return False
 	else:
@@ -180,8 +184,7 @@ def getAlbumId(album_name):
 
 def getPhotosFromAlbum(album_id):
 	cursor = conn.cursor()
-	cursor.execute("SELECT imgdata, photo_id, caption FROM Photos WHERE album_id = '{0}'".format(album_id))
-
+	cursor.execute("SELECT imgdata, photo_id, caption, user_id FROM Photos album_id = '{0}'".format(album_id))
 	return cursor.fetchall()
 
 def getTagId(tag):
@@ -284,10 +287,6 @@ def ListFriends():
 	return render_template('list_friends.html', message='Here are your friends', friends = data)
 
 # Albums
-@app.route('/albums', methods=['GET', 'POST'])
-@flask_login.login_required
-def Albums():
-	
 
 @app.route('/create_album', methods=['GET', 'POST'])
 @flask_login.login_required
@@ -352,10 +351,9 @@ def DeleteAlbum():
 def ShowPhotos():
 	if request.method == 'POST':
 		albumId = request.form.get('albumId')
-		cursor = conn.cursor()
 		photos = getPhotosFromAlbum(albumId)
 
-		return render_template('show_photos.html', message='Here are your photos', photos = photos, base64=base64)
+		return render_template('show_photos.html', message='Here are your photos', photos = photos, comment = comment, base64=base64)
 	
 	return render_template('show_photos.html')
 
@@ -441,6 +439,77 @@ def TopTags():
 	cursor.execute("SELECT name, COUNT(name) FROM Tags, Tagged WHERE Tags.tag_id = Tagged.tag_id GROUP BY name ORDER BY COUNT(name) DESC LIMIT 3")
 	tags = cursor.fetchall()
 	return tags
+
+# Comments Methods
+@app.route('/comment', methods=['GET', 'POST'])
+def comment():
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	if request.method == 'POST':
+		photo_user_id = request.form.get('user_id')
+		photo_user_id = int(photo_user_id)
+		if uid == photo_user_id :
+			return render_template('show_photos.html', message = "You cannot comment on your own photo!", photos = getUsersPhotos(uid), base64=base64)
+		else:
+			photo_id = request.form.get('photo_id')
+			comment = request.form.get('comment')
+			cursor = conn.cursor()
+			cursor.execute("INSERT INTO Comments (photo_id, user_id, text) VALUES ('{0}', '{1}', '{2}')".format(photo_id, uid, comment))
+			conn.commit()
+			return render_template('show_photos.html', message = "Comment added!", photos = getUsersPhotos(uid), base64=base64)
+
+	return render_template('show_photos.html')
+
+def getComment(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT text, fname, lname FROM Comments, Users WHERE Comments.user_id = Users.user_id AND Comments.photo_id = '{0}'".format(photo_id))
+	comments = cursor.fetchall()
+	return comments
+
+# Likes Methods
+@app.route('/like', methods=['GET', 'POST'])
+@flask_login.login_required
+def likePhoto():
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	if request.method == 'POST':
+		photo_id = request.form.get('photo_id')
+		photo_id = int(photo_id)
+		cursor = conn.cursor()
+		cursor.execute("SELECT photo_id FROM Likes WHERE photo_id = '{0}' AND user_id = '{1}'".format(photo_id, uid))
+		data = cursor.fetchall()
+
+		for i in range(len(data)):
+			if data[i][0] == photo_id:
+				return render_template('show_photos.html', message = "You already liked this photo!", photos = getUsersPhotos(uid), base64=base64)
+
+
+		cursor.execute("INSERT INTO Likes (photo_id, user_id) VALUES ('{0}', '{1}')".format(photo_id, uid))
+		conn.commit()
+		return render_template('show_photos.html', message = "Photo Liked!", photos = getUsersPhotos(uid), base64=base64)
+
+	return render_template('show_photos.html', message="Here are your photos.", photos = getUsersPhotos(uid), base64=base64)
+
+@app.route('/view_likes', methods=['GET', 'POST'])
+def viewLikes():
+	if request.method == 'POST':
+		uid = request.form.get('user_id')
+		photo_id = request.form.get('photo_id')
+		likes = getLikes(photo_id)
+		users = getWhoLiked(photo_id)
+		return render_template('show_likes.html', message = "Here are the likes for this photo and who liked it.", likes = likes, users = users, photos = getUsersPhotos(uid), base64=base64)
+	else:
+		return render_template('show_likes.html')
+def getLikes(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT COUNT(user_id) FROM Likes WHERE photo_id = '{0}'".format(photo_id))
+	likes = cursor.fetchall()
+	return likes
+
+def getWhoLiked(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT fname, lname FROM Likes, Users WHERE Likes.user_id = Users.user_id AND Likes.photo_id = '{0}'".format(photo_id))
+	user = cursor.fetchall()
+	return user
+
 
 #default page
 @app.route("/", methods=['GET'])

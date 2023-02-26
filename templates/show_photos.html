@@ -14,12 +14,33 @@
 
       <li>{{photo[2]}}<br>
       <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/></li>
-      <form method="post" action="/show_photos">
+      <br>
+
+      <form method="post" action="/view_likes">
+        <input type="hidden" name="photo_id" value="{{photo[1]}}">
+        <input type="submit" value="View Likes">
+      </form>
+      
+      <!-- Like Photo -->
+      <form method="post" action="/like">
+        <input type="hidden" name="photo_id" value="{{photo[1]}}">
+        <input type="submit" value="Like">
+      <br />
+      </form>
+      <!-- Delete photo -->
+      <form method="post" action="{{ url_for('DeletePhotoFromView')}}">
         <input type="hidden" name="photo_id" value="{{photo[1]}}">
         <input type="submit" name="delete" value="Delete">
-      
-
-      </form> 
+      </form>
+      <br />
+      <!-- Comment on photos -->
+      <form method="post" action="{{ url_for('comment') }}">
+        <input type="hidden" name="photo_id" value="{{photo[1]}}">
+        <input type="hidden" name="user_id" value="{{photo[3]}}">
+        <label type="text" name="comment">Comment:</label>
+        <input type="text" name="comment" required="true"> <br />
+        <input type="submit" name="like" value="Comment">
+      </form>
   {% endfor %}
   </ul>
 {% endif %}
