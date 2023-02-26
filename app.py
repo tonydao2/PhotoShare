@@ -261,21 +261,24 @@ def AddFriends():
 		uid = getUserIdFromEmail(flask_login.current_user.id)
 		friend_email = request.form.get('friend_email')
 		cursor = conn.cursor()
-		friend_id = getUserIdFromEmail(friend_email)
-
-		cursor.execute("SELECT UID2 FROM Friends WHERE UID1 = '{0}'".format(uid))
-		data = cursor.fetchall()
-
-		for i in data:
-			if i[0] == friend_id:
-				return render_template('add_friends.html', message = "Already friends!")
-
-		cursor.execute("INSERT INTO Friends (UID1, UID2) VALUES ('{0}', '{1}')".format(uid, friend_id))
-		conn.commit()
 		
-		return render_template('hello.html', message = "Added as friends!")
-	
-	return render_template('add_friends.html')
+		if isEmailUnique(friend_email) == True:
+			return render_template('add_friends.html', message = "Email does not exist!")
+		else:
+			friend_id = getUserIdFromEmail(friend_email)
+			cursor.execute("SELECT UID2 FROM Friends WHERE UID1 = '{0}'".format(uid))
+			data = cursor.fetchall()
+
+			for i in data:
+				if i[0] == friend_id:
+					return render_template('add_friends.html', message = "Already friends!")
+
+			cursor.execute("INSERT INTO Friends (UID1, UID2) VALUES ('{0}', '{1}')".format(uid, friend_id))
+			conn.commit()
+			
+			return render_template('hello.html', message = "Added as friends!")
+	else:
+		return render_template('add_friends.html')
 
 @app.route('/list_friends', methods=['GET'])
 @flask_login.login_required
@@ -285,6 +288,14 @@ def ListFriends():
 	cursor.execute("SELECT email, fname, lname FROM Users WHERE user_id IN (SELECT UID2 FROM Friends WHERE UID1 = '{0}')".format(uid))
 	data = cursor.fetchall()
 	return render_template('list_friends.html', message='Here are your friends', friends = data)
+
+@app.route('/rec_friends', methods=['GET'])
+def friendRec():
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	cursor = conn.cursor()
+	cursor.execute("SELECT email, fname, lname FROM Users Where user_id IN (SELECT DISTINCT f2.UID2 FROM Friends AS f1 JOIN Friends AS f2 ON f1.UID2 = f2.UID1 WHERE f1.UID1 = '{0}' AND f2.UID2 != f1.UID1)".format(uid))
+	friends = cursor.fetchall()
+	return render_template('rec_friends.html', message='Here are your recommended friends', friends = friends)
 
 # Albums
 
@@ -498,6 +509,7 @@ def viewLikes():
 		return render_template('show_likes.html', message = "Here are the likes for this photo and who liked it.", likes = likes, users = users, photos = getUsersPhotos(uid), base64=base64)
 	else:
 		return render_template('show_likes.html')
+	
 def getLikes(photo_id):
 	cursor = conn.cursor()
 	cursor.execute("SELECT COUNT(user_id) FROM Likes WHERE photo_id = '{0}'".format(photo_id))

@@ -1,6 +1,5 @@
-<!DOCTYPE html>
 <head>
-    <title>Add friends</title>
+    <title>Add friends of friends</title>
   </head>
   <body>
 
@@ -9,18 +8,24 @@
       <h4>{{message}}</h4>
     {% endif %}
 
-    <div id="content">
+    {%if friends%}
+        <ul>
+        {%for friend in friends%}
+            <li>{{friend[0] + ': ' + friend[1] + ' ' + friend[2]}}</li>
+        {%endfor%}
+        </ul>
+        <div id="content">
             <form method="post" action="{{ url_for('AddFriends') }}">
                 <label for="friend_mail">Enter the friend's email: </label>
                 <input type="friend_mail" name="friend_email" required='true' /><br />
                 <input type="submit"/>
             </form>
-    </div>
+        </div>
+    {%endif%}
 
     </body>
 
     <ul>
-      <li><a href="/rec_friends">See reccomended friends</a></li>
       <li><a href='/upload'>Upload a photo</a> </li>
       <li><a href='/logout'>Logout</a></li>
       <li><a href='/'>Home</a></li>
