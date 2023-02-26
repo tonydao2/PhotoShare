@@ -306,17 +306,33 @@ def BrowseAlbum():
 @app.route('/delete_album', methods=['GET', 'POST'])
 @flask_login.login_required
 def DeleteAlbum():
-	cursor = conn.cursor()
 	if request.method == 'POST':
 		uid = getUserIdFromEmail(flask_login.current_user.id)
 		album_name = request.form.get('album_name')
-		cursor.execute("DELETE FROM Albums WHERE user_id = '{0}' AND Name = '{1}'".format(uid, album_name))
+		album_id = getAlbumId(album_name)
+		
+
+		cursor = conn.cursor()
+		cursor.execute("SELECT photo_id FROM Photos WHERE album_id = '{0}'".format(album_id))
+		all_photos = cursor.fetchall()
+
+		# Deletes all photo from album
+		for i in range(len(all_photos)):
+			temp = int(all_photos[i][0])
+			DeletePhotos(temp)
+
+		cursor.execute("DELETE FROM Albums WHERE user_id = '{0}' AND album_id = '{1}'".format(uid, album_id))
 		conn.commit()
 
 		return render_template('delete_album.html', message = "Album deleted!")
 	else:
-		
-		return render_template('delete_album.html', message='Here are your albums')
+		uid = getUserIdFromEmail(flask_login.current_user.id)
+		cursor = conn.cursor()
+		cursor.execute("SELECT Name, album_id FROM Albums WHERE user_id = '{0}'".format(uid))
+		albums = cursor.fetchall()
+		return render_template('delete_album.html', message="Here are your albums", albums = albums)
+
+# Photo methods
 
 @app.route('/choose_album', methods=['GET', 'POST'])
 def ShowPhotos():
@@ -329,7 +345,25 @@ def ShowPhotos():
 	
 	return render_template('show_photos.html')
 	
+def DeletePhotos(photo_id):
+	cursor = conn.cursor()
 
+	# Unlinks photoid from Tagged
+	cursor.execute("DELETE FROM Tagged WHERE photo_id = '{0}'".format(photo_id))
+	conn.commit()
+
+	cursor.execute("SELECT tag_id FROM Tagged WHERE photo_id = '{0}'".format(photo_id))
+	tags = cursor.fetchall() # All tags linked to photo
+
+	for i in range(len(tags)):
+		cursor.execute("DELETE FROM Tags WHERE tag_id ='{0}'".format(tags[i][0]))
+		conn.commit()
+
+	cursor.execute("DELETE FROM Photos WHERE photo_id='{0}'".format(photo_id))
+	conn.commit()
+
+
+	
 #default page
 @app.route("/", methods=['GET'])
 def hello():
