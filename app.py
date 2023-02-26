@@ -24,7 +24,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'tony2000'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'tonydao2000'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -510,6 +510,20 @@ def getWhoLiked(photo_id):
 	user = cursor.fetchall()
 	return user
 
+#user activity 
+def contributions_score():
+	cursor = conn.cursor()
+	count_pic = "SELECT user_id, COUNT(photo_id) FROM Photos GROUP BY user_id"
+	count_com = "SELECT user_id, COUNT(comment_id) FROM Comments GROUP BY user_id"
+	total = count_pic + count_com 
+	score = "SELECT t1.user_id, SUM(t1.num_pics) AS total_sum FROM (" + total + ") AS t1 GROUP BY t1.user_id ORDER BY total_sum DESC LIMIT 10"
+	cursor.execute(score)
+	out = cursor.fetchall()
+	final_result = []
+	for i in range(len(out)):
+		cursor.execute("SELECT first_name, last_name FROM Users WHERE user_id = '{0}'".format(int(out[i][0])))
+		final_result += cursor.fetchall()
+	return final_result 
 
 #default page
 @app.route("/", methods=['GET'])
