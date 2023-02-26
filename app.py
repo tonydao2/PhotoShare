@@ -274,6 +274,7 @@ def ListFriends():
 	data = cursor.fetchall()
 	return render_template('list_friends.html', message='Here are your friends', friends = data)
 
+# Albums
 @app.route('/create_album', methods=['GET', 'POST'])
 @flask_login.login_required
 def CreateAlbum():
@@ -301,6 +302,21 @@ def BrowseAlbum():
 		return render_template('choose_album.html', message='Here are your albums', albums = albums, uid = uid)
 	
 	return render_template('browse_album.html')
+
+@app.route('/delete_album', methods=['GET', 'POST'])
+@flask_login.login_required
+def DeleteAlbum():
+	cursor = conn.cursor()
+	if request.method == 'POST':
+		uid = getUserIdFromEmail(flask_login.current_user.id)
+		album_name = request.form.get('album_name')
+		cursor.execute("DELETE FROM Albums WHERE user_id = '{0}' AND Name = '{1}'".format(uid, album_name))
+		conn.commit()
+
+		return render_template('delete_album.html', message = "Album deleted!")
+	else:
+		
+		return render_template('delete_album.html', message='Here are your albums')
 
 @app.route('/choose_album', methods=['GET', 'POST'])
 def ShowPhotos():
