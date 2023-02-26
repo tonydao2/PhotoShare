@@ -10,6 +10,8 @@
         <div class="title">
             <h1>Upload a photo to Photoshare</h1>
         </div>
+
+        <div class="content">
             <form method="post" enctype="multipart/form-data" action="/upload">
                 <label for="photo">Select photo:</label>
                 <input type="file" name="photo" required='true' /><br />
@@ -21,4 +23,11 @@
                 <input type="text" name="tags"/><br />
                 <input type="submit" value="Upload" />
             </form>
+
+        </div>
+
+        <li><a href='/logout'>Logout</a></li>
+        <li><a href='/'>Home</a></li>
+        <li><a href="/create_album">Create an album</a></li>
+        <li><a href="/delete_album">Delete an album</a></li>
     </body>

@@ -10,11 +10,16 @@
         <input type="submit" value="Search"/>
     </form>
 
+    {% if message %}
+        <h2>{{message}}</h2>
+    {% endif %}
+
     {% if photos %}
     <ul>
     {% for photo in photos %}
         <li>{{photo[2]}}<br>
         <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/></li>
+        <br>
     {% endfor %}
     </ul>
     {% endif %}
@@ -22,6 +27,7 @@
 
     <ul>
         <li><a href='/popular_tags'>See the most popular Tags</a> </li>
+        <li><a href="/user_tags">View your photos by tags</a></li>
         <li><a href='/logout'>Logout</a></li>
         <li><a href='/'>Home</a></li>
     </ul>

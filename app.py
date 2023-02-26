@@ -284,6 +284,11 @@ def ListFriends():
 	return render_template('list_friends.html', message='Here are your friends', friends = data)
 
 # Albums
+@app.route('/albums', methods=['GET', 'POST'])
+@flask_login.login_required
+def Albums():
+	
+
 @app.route('/create_album', methods=['GET', 'POST'])
 @flask_login.login_required
 def CreateAlbum():
@@ -383,22 +388,60 @@ def DeletePhotos(photo_id):
 	conn.commit()
 
 # Tags Methods
-@app.route('photo_by_tag', methods=['GET', 'POST'])
-# def PhotoByTag():
-# 	uid = getUserIdFromEmail(flask_login.current_user.id)
-# 	if request.method == 'POST':
-	
-@app.route('popular_tags', methods=['GET', 'POST'])
+
+def getPhotosFromTag(tags):
+	cursor = conn.cursor()
+	cursor.execute("SELECT imgdata, name, caption, fname, lname FROM Users, Photos, Tags, Tagged WHERE Tags.tag_id = Tagged.tag_id AND Tagged.photo_id = Photos.photo_id AND Photos.user_id = Users.user_id AND Tags.name = '{0}'".format(tags))
+	photos = cursor.fetchall()
+	return photos
+
+@app.route('/photo_by_tags', methods=['GET', 'POST'])
+def PhotoByTag():
+	if request.method == 'POST':
+		tag = request.form.get('tag')
+		photos = getPhotosFromTag(tag)
+
+		return render_template('photo_by_tags.html', message="Here are the photos for this tag.", photos = photos, base64=base64)
+	else:
+		return render_template('photo_by_tags.html')
+
+@app.route('/user_tags', methods=['GET', 'POST'])
+@flask_login.login_required
+def UserTags():
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	cursor = conn.cursor()
+	if request.method == 'POST':
+		tag = request.form.get('tag')
+		photos = getPhotosFromTag(tag)
+		return render_template('user_tags.html', message="Here are the photos for this tag.", photos = photos, base64=base64)
+	else:
+		return render_template('user_tags.html', tags = getUserTags())
+
+def getUserTags():
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	cursor = conn.cursor()
+	cursor.execute("SELECT DISTINCT name FROM Tags, Tagged, Photos WHERE Tags.tag_id = Tagged.tag_id AND Tagged.photo_id = Photos.photo_id AND Photos.user_id = '{0}'".format(uid))
+	tags = cursor.fetchall()
+	return tags
+
+@app.route('/popular_tags', methods=['GET', 'POST'])
 def PopularTags():
 	if request.method == 'POST':
 		tag = request.form.get('tag')
 		cursor = conn.cursor()
-		cursor.execute("SELECT imgdata, name, caption, fname, lname FROM Users, Photos, Tags, Tagged WHERE Tags.tag_id = Tagged.tag_id AND Tagged.photo_id = Photos.photo_id AND Photos.user_id = Users.user_id AND Tags.tag = '{0}'".format(tag))
+		cursor.execute("SELECT imgdata, name, caption, fname, lname FROM Users, Photos, Tags, Tagged WHERE Tags.tag_id = Tagged.tag_id AND Tagged.photo_id = Photos.photo_id AND Photos.user_id = Users.user_id AND Tags.name = '{0}'".format(tag))
 		photos = cursor.fetchall()
 
-		return render_template('popular_tags.html', message="Here are the photos for this tag.", photos = photos, base64=base64)
+		return render_template('photo_by_tags.html', message="Here are the photos for this tag.", photos = photos, base64=base64)
+	else:
+		return render_template('popular_tags.html', tags = TopTags())
 
-	
+def TopTags():
+	cursor = conn.cursor()
+	cursor.execute("SELECT name, COUNT(name) FROM Tags, Tagged WHERE Tags.tag_id = Tagged.tag_id GROUP BY name ORDER BY COUNT(name) DESC LIMIT 3")
+	tags = cursor.fetchall()
+	return tags
+
 #default page
 @app.route("/", methods=['GET'])
 def hello():
