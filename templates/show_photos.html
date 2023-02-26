@@ -14,10 +14,15 @@
 
       <li>{{photo[2]}}<br>
       <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/></li>
+      <form method="post" action="/show_photos">
+        <input type="hidden" name="photo_id" value="{{photo[1]}}">
+        <input type="submit" name="delete" value="Delete">
+      
+
+      </form> 
   {% endfor %}
   </ul>
 {% endif %}
-
 
   <ul>
     <li><a href='/upload'>Upload a photo</a> </li>

@@ -145,7 +145,7 @@ def register_user():
 		return render_template('hello.html', name=email, message='Account Created!')
 	else: # Already created account
 		print("couldn't find all tokens")
-		return flask.redirect(flask.url_for('register'))
+		return render_template('register.html', supress='False')
 
 
 def getUsersPhotos(uid):
@@ -189,6 +189,13 @@ def getTagId(tag):
 	cursor.execute("SELECT tag_id FROM Tags WHERE name = '{0}'".format(tag))
 	return cursor.fetchone()[0]
 
+def AlbumExist(album_name):
+	cursor = conn.cursor()
+	if cursor.execute("SELECT album_id FROM Albums WHERE Name = '{0}'".format(album_name)):
+		return True
+	else:
+		return False
+
 #end login code
 
 @app.route('/profile')
@@ -213,8 +220,10 @@ def upload_file():
 		album_name = request.form.get('album_name')
 		photo_data = imgfile.read()
 		cursor = conn.cursor()
-
+		if (AlbumExist(album_name) == False):
+			return render_template('upload.html', message='Album does not exist!')
 		album_id = getAlbumId(album_name)
+
 		#insert photo into database
 		cursor.execute("INSERT INTO Photos(imgdata, user_id, caption, album_id) VALUES (%s, %s, %s, %s)", (photo_data, uid, caption, album_id))
 		conn.commit()
@@ -344,7 +353,18 @@ def ShowPhotos():
 		return render_template('show_photos.html', message='Here are your photos', photos = photos, base64=base64)
 	
 	return render_template('show_photos.html')
+
+@app.route('/show_photos', methods=['GET', 'POST'])
+@flask_login.login_required
+def DeletePhotoFromView():
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	if request.method == 'POST':
+		photo_id = request.form.get('photo_id')
+		DeletePhotos(photo_id)
+		return render_template('show_photos.html', message = "Photo deleted! Here are your Photos.", photos = getUsersPhotos(uid), base64=base64)
 	
+	return render_template('show_photos.html', message="Here are your Photos." , photos = getUsersPhotos(uid), base64=base64)
+
 def DeletePhotos(photo_id):
 	cursor = conn.cursor()
 
@@ -362,6 +382,21 @@ def DeletePhotos(photo_id):
 	cursor.execute("DELETE FROM Photos WHERE photo_id='{0}'".format(photo_id))
 	conn.commit()
 
+# Tags Methods
+@app.route('photo_by_tag', methods=['GET', 'POST'])
+# def PhotoByTag():
+# 	uid = getUserIdFromEmail(flask_login.current_user.id)
+# 	if request.method == 'POST':
+	
+@app.route('popular_tags', methods=['GET', 'POST'])
+def PopularTags():
+	if request.method == 'POST':
+		tag = request.form.get('tag')
+		cursor = conn.cursor()
+		cursor.execute("SELECT imgdata, name, caption, fname, lname FROM Users, Photos, Tags, Tagged WHERE Tags.tag_id = Tagged.tag_id AND Tagged.photo_id = Photos.photo_id AND Photos.user_id = Users.user_id AND Tags.tag = '{0}'".format(tag))
+		photos = cursor.fetchall()
+
+		return render_template('popular_tags.html', message="Here are the photos for this tag.", photos = photos, base64=base64)
 
 	
 #default page

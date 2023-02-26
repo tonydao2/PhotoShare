@@ -1,0 +1,27 @@
+<head>
+    <title>View Photos By Tags</title>
+</head>
+
+<body>
+    <h1>View Photos By Tags</h1>
+    <form method="post" action="/photo_by_tags">
+        <label for="tag">Enter a tag:</label>
+        <input type="text" name="tag" required='true'/><br />
+        <input type="submit" value="Search"/>
+    </form>
+
+    {% if photos %}
+    <ul>
+    {% for photo in photos %}
+        <li>{{photo[2]}}<br>
+        <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/></li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+
+
+    <ul>
+        <li><a href='/popular_tags'>See the most popular Tags</a> </li>
+        <li><a href='/logout'>Logout</a></li>
+        <li><a href='/'>Home</a></li>
+    </ul>
