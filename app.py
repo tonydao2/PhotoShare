@@ -556,7 +556,6 @@ def getWhoLiked(photo_id):
 	return user
 
 #user activity
-
 @app.route('/top_users', methods=['GET'])
 def showScore():
 	cursor = conn.cursor()
