@@ -10,13 +10,18 @@
         <p><input type="submit" value="Search" /></p>
     </form>
 
-    {% if score %} 
+    {% if message %}
+    <h4>{{message}}</h4>
+    {% endif %}
+
+    {% if comments %}
     <ol>
-    {% for user in score %}
+    {% for user in comments %}
         <li>{{user[0] + " " + user[1]}}</li>
     {% endfor %}
     </ol>
     {% endif %}
+
     <ul>
         <li><a href='/upload'>Upload a photo</a> </li>
         <li><a href='/logout'>Logout</a></li>

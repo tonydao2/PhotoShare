@@ -182,9 +182,16 @@ def getAlbumId(album_name):
 	cursor.execute("SELECT album_id FROM Albums WHERE Name = '{0}' AND user_id = '{1}'".format(album_name, uid))
 	return cursor.fetchone()[0]
 
+def containsPhotos(album_id):
+	cursor = conn.cursor()
+	if cursor.execute("SELECT photo_id FROM Photos WHERE album_id = '{0}'".format(album_id)):
+		return True
+	else:
+		return False
+
 def getPhotosFromAlbum(album_id):
 	cursor = conn.cursor()
-	cursor.execute("SELECT imgdata, photo_id, caption, user_id FROM Photos album_id = '{0}'".format(album_id))
+	cursor.execute("SELECT imgdata, photo_id, caption, user_id FROM Photos WHERE album_id='{0}' ".format(album_id))
 	return cursor.fetchall()
 
 def getTagId(tag):
@@ -362,9 +369,12 @@ def DeleteAlbum():
 def ShowPhotos():
 	if request.method == 'POST':
 		albumId = request.form.get('albumId')
+		if containsPhotos(albumId) == False:
+			return render_template('choose_album.html', message = "Album is empty!")
+		
 		photos = getPhotosFromAlbum(albumId)
 
-		return render_template('show_photos.html', message='Here are your photos', photos = photos, comment = comment, base64=base64)
+		return render_template('show_photos.html', message='Here are your photos', photos = photos, base64=base64)
 	
 	return render_template('show_photos.html')
 
@@ -374,10 +384,21 @@ def DeletePhotoFromView():
 	uid = getUserIdFromEmail(flask_login.current_user.id)
 	if request.method == 'POST':
 		photo_id = request.form.get('photo_id')
+		# Check if User owns photo
+		if checkPhotoOwner(photo_id, uid) == False:
+			return render_template('show_photos.html', message = "You do not own this photo!", photos = getUsersPhotos(uid), base64=base64)
 		DeletePhotos(photo_id)
 		return render_template('show_photos.html', message = "Photo deleted! Here are your Photos.", photos = getUsersPhotos(uid), base64=base64)
 	
 	return render_template('show_photos.html', message="Here are your Photos." , photos = getUsersPhotos(uid), base64=base64)
+
+def checkPhotoOwner(photo_id, uid):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id FROM Photos WHERE photo_id = '{0}'".format(photo_id))
+	owner = cursor.fetchone()
+	if owner[0] == uid:
+		return True
+	return False
 
 def DeletePhotos(photo_id):
 	cursor = conn.cursor()
@@ -466,7 +487,7 @@ def comment():
 			cursor = conn.cursor()
 			cursor.execute("INSERT INTO Comments (photo_id, user_id, text) VALUES ('{0}', '{1}', '{2}')".format(photo_id, uid, comment))
 			conn.commit()
-			return render_template('show_photos.html', message = "Comment added!", photos = getUsersPhotos(uid), base64=base64)
+			return render_template('show_photos.html', message = "Comment added!", photos = getUsersPhotos(photo_user_id), base64=base64)
 
 	return render_template('show_photos.html')
 
@@ -481,10 +502,10 @@ def SearchComments():
 	if request.method == 'POST':
 		comment = request.form.get('comment')
 		cursor = conn.cursor()
-		cursor.execute("SELECT imgdata, name, caption, fname, lname FROM Users, Photos, Comments WHERE Comments.photo_id = Photos.photo_id AND Photos.user_id = Users.user_id AND Comments.text = '{0}'".format(comment))
-		photos = cursor.fetchall()
+		cursor.execute("SELECT fname, lname, COUNT(*) AS num_matches FROM Users, Comments WHERE Users.user_id = Comments.user_id AND text = '{0}' GROUP BY Users.user_id ORDER BY num_matches DESC".format(comment))
+		comments = cursor.fetchall()
 
-		return render_template('search_comment.html', message="Here are the photos for this comment.", photos = photos, base64=base64)
+		return render_template('search_comment.html', message="Here are the users that commented this.", comments = comments)
 	else:
 		return render_template('search_comment.html')
 
