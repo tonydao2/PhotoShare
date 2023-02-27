@@ -1,0 +1,22 @@
+<head>
+    <title>Top Users</title>
+</head>
+
+<body>
+    <h1>Top Users</h1>
+    {% if score %}
+    <ol>
+    {% for user in score %}
+        <li>{{user[0] + " " + user[1]}}</li>
+    {% endfor %}
+    </ol>
+    {% endif %}
+
+
+    <ul>
+        <li><a href='/upload'>Upload a photo</a> </li>
+        <li><a href='/logout'>Logout</a></li>
+        <li><a href='/'>Home</a></li>
+
+    </ul>
+</body>

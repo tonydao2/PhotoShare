@@ -24,7 +24,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'tonydao2000'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'tony2000'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -476,6 +476,18 @@ def getComment(photo_id):
 	comments = cursor.fetchall()
 	return comments
 
+@app.route('/search_comment', methods=['GET', 'POST'])
+def SearchComments():
+	if request.method == 'POST':
+		comment = request.form.get('comment')
+		cursor = conn.cursor()
+		cursor.execute("SELECT imgdata, name, caption, fname, lname FROM Users, Photos, Comments WHERE Comments.photo_id = Photos.photo_id AND Photos.user_id = Users.user_id AND Comments.text = '{0}'".format(comment))
+		photos = cursor.fetchall()
+
+		return render_template('search_comment.html', message="Here are the photos for this comment.", photos = photos, base64=base64)
+	else:
+		return render_template('search_comment.html')
+
 # Likes Methods
 @app.route('/like', methods=['GET', 'POST'])
 @flask_login.login_required
@@ -522,20 +534,14 @@ def getWhoLiked(photo_id):
 	user = cursor.fetchall()
 	return user
 
-#user activity 
-def contributions_score():
+#user activity
+
+@app.route('/top_users', methods=['GET'])
+def showScore():
 	cursor = conn.cursor()
-	count_pic = "SELECT user_id, COUNT(photo_id) FROM Photos GROUP BY user_id"
-	count_com = "SELECT user_id, COUNT(comment_id) FROM Comments GROUP BY user_id"
-	total = count_pic + count_com 
-	score = "SELECT t1.user_id, SUM(t1.num_pics) AS total_sum FROM (" + total + ") AS t1 GROUP BY t1.user_id ORDER BY total_sum DESC LIMIT 10"
-	cursor.execute(score)
-	out = cursor.fetchall()
-	final_result = []
-	for i in range(len(out)):
-		cursor.execute("SELECT first_name, last_name FROM Users WHERE user_id = '{0}'".format(int(out[i][0])))
-		final_result += cursor.fetchall()
-	return final_result 
+	cursor.execute("SELECT fname, lname, SUM(num_pics) AS total_sum FROM (SELECT user_id, COUNT(photo_id) AS num_pics FROM Photos GROUP BY user_id UNION SELECT user_id, COUNT(comment_id) AS num_pics FROM Comments GROUP BY user_id) AS t1, Users WHERE t1.user_id = Users.user_id GROUP BY t1.user_id ORDER BY total_sum DESC LIMIT 10")
+	score = cursor.fetchall()
+	return render_template('top_users.html', message = "Here are the top 10 users who have contributed the most.", score = score)
 
 #default page
 @app.route("/", methods=['GET'])
